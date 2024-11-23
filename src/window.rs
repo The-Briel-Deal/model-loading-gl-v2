@@ -104,7 +104,7 @@ impl ApplicationHandler for GfWindow {
                 .create_window_surface(&self.config, &surface_attributes)
                 .unwrap()
         };
-        let possibly_current_context = context.make_current(&surface);
+        let _possibly_current_context = context.make_current(&surface);
     }
     fn window_event(
         &mut self,
@@ -112,16 +112,12 @@ impl ApplicationHandler for GfWindow {
         window_id: winit::window::WindowId,
         event: winit::event::WindowEvent,
     ) {
-        match event {
-            winit::event::WindowEvent::RedrawRequested => {
-                self.renderer.draw();
-                self.window.request_redraw();
-            }
-            _ => (),
+        if let winit::event::WindowEvent::RedrawRequested = event {
+            self.renderer.draw();
+            self.window.request_redraw();
         }
         dbg!("Window Event Called");
     }
-    fn exiting(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {}
 }
 
 fn get_gl_string(gl: &gl::Gl, variant: gl::types::GLenum) -> Option<&'static CStr> {
