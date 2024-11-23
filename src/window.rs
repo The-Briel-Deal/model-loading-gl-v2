@@ -108,8 +108,8 @@ impl ApplicationHandler for GfWindow {
     }
     fn window_event(
         &mut self,
-        event_loop: &winit::event_loop::ActiveEventLoop,
-        window_id: winit::window::WindowId,
+        _event_loop: &winit::event_loop::ActiveEventLoop,
+        _window_id: winit::window::WindowId,
         event: winit::event::WindowEvent,
     ) {
         if let winit::event::WindowEvent::RedrawRequested = event {
