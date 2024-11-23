@@ -7,10 +7,10 @@ use anyhow::Context;
 use gl::types::GLfloat;
 use glutin::{
     config::{Config, ConfigTemplateBuilder, GlConfig},
-    context::{ContextAttributesBuilder, NotCurrentContext},
+    context::{ContextAttributesBuilder, NotCurrentContext, PossiblyCurrentContext},
     display::GetGlDisplay,
     prelude::{GlDisplay, NotCurrentGlContext},
-    surface::{Surface, SurfaceAttributesBuilder, WindowSurface},
+    surface::{GlSurface, Surface, SurfaceAttributesBuilder, WindowSurface},
 };
 use glutin_winit::{DisplayBuilder, GlWindow};
 use winit::{
@@ -31,6 +31,7 @@ pub struct GfWindow {
     config: Config,
     renderer: Renderer,
     surface: Option<Surface<WindowSurface>>,
+    context: Option<PossiblyCurrentContext>,
     exit_state: anyhow::Result<()>,
 }
 
@@ -64,6 +65,7 @@ impl GfWindow {
             window,
             config,
             renderer,
+            context: None,
             surface: None,
             exit_state: Ok(()),
         })
@@ -115,6 +117,7 @@ impl ApplicationHandler for GfWindow {
         if let winit::event::WindowEvent::RedrawRequested = event {
             self.renderer.draw();
             self.window.request_redraw();
+            let _ = self.surface.as_ref().unwrap().swap_buffers(self.context.as_ref().unwrap());
         }
         dbg!("Window Event Called");
     }
