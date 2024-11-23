@@ -6,7 +6,7 @@ use std::{
 use anyhow::Context;
 use gl::types::GLfloat;
 use glutin::{
-    config::{Config, ConfigTemplate, ConfigTemplateBuilder, GlConfig},
+    config::{Config, ConfigTemplateBuilder, GlConfig},
     context::{ContextAttributesBuilder, NotCurrentContext},
     display::GetGlDisplay,
     prelude::{GlDisplay, NotCurrentGlContext},
@@ -17,7 +17,7 @@ use winit::{
     application::ApplicationHandler,
     event_loop::EventLoop,
     raw_window_handle::HasWindowHandle,
-    window::{self, Window, WindowAttributes},
+    window::{Window, WindowAttributes},
 };
 
 pub mod gl {
