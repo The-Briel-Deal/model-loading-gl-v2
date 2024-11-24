@@ -100,7 +100,8 @@ impl GfWindow {
 }
 
 impl ApplicationHandler for GfWindow {
-    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {}
+    /// Unused, all initialization is done in main.
+    fn resumed(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {}
     fn window_event(
         &mut self,
         _event_loop: &winit::event_loop::ActiveEventLoop,

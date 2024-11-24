@@ -7,10 +7,9 @@ fn main() -> anyhow::Result<()> {
 
     let window = GfWindow::new(&event_loop)?;
 
-    let context = window.create_context()?;
     let surface = window.create_window_surface()?;
-    let current_context = context.make_current(&surface)?;
+    let context = window.create_context()?.make_current(&surface)?;
     let renderer = window.create_gl_renderer();
 
-    window.run(event_loop, surface, renderer, current_context)
+    window.run(event_loop, surface, renderer, context)
 }
