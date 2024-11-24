@@ -5,7 +5,7 @@ use glutin::{
     config::{Config, ConfigTemplateBuilder, GlConfig},
     context::{ContextAttributesBuilder, NotCurrentContext, PossiblyCurrentContext},
     display::GetGlDisplay,
-    prelude::{GlDisplay, NotCurrentGlContext},
+    prelude::GlDisplay,
     surface::{GlSurface, Surface, SurfaceAttributesBuilder, WindowSurface},
 };
 use glutin_winit::{DisplayBuilder, GlWindow};
