@@ -186,41 +186,44 @@ impl Renderer {
             gl.DeleteShader(fragment_shader);
 
             let mut vao = std::mem::zeroed();
-            gl.GenVertexArrays(1, &mut vao);
+            gl.CreateVertexArrays(1, &mut vao);
             assert_ne!(vao, 0);
-            gl.BindVertexArray(vao);
 
             let mut vbo = std::mem::zeroed();
-            gl.GenBuffers(1, &mut vbo);
+            gl.CreateBuffers(1, &mut vbo);
             assert_ne!(vbo, 0);
-            gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
-            gl.BufferData(
-                gl::ARRAY_BUFFER,
+            gl.NamedBufferStorage(
+                vbo,
                 (VERTEX_DATA.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
                 VERTEX_DATA.as_ptr() as *const _,
-                gl::STATIC_DRAW,
+                gl::DYNAMIC_STORAGE_BIT,
             );
 
-            let pos_attrib = gl.GetAttribLocation(program, b"position\0".as_ptr() as *const _);
-            let color_attrib = gl.GetAttribLocation(program, b"color\0".as_ptr() as *const _);
-            gl.VertexAttribPointer(
-                pos_attrib as gl::types::GLuint,
-                2,
-                gl::FLOAT,
+            gl.VertexArrayVertexBuffer(
+                vao,
+                0,
+                vbo,
                 0,
                 5 * std::mem::size_of::<f32>() as gl::types::GLsizei,
-                std::ptr::null(),
             );
-            gl.VertexAttribPointer(
-                color_attrib as gl::types::GLuint,
+
+
+            let pos_attrib = gl.GetAttribLocation(program, b"position\0".as_ptr() as *const _);
+            gl.EnableVertexArrayAttrib(vao, pos_attrib as u32);
+            gl.VertexArrayAttribFormat(vao, pos_attrib as u32, 2, gl::FLOAT, false as u8, 0);
+            gl.VertexArrayAttribBinding(vao, pos_attrib as u32, 0);
+
+            let color_attrib = gl.GetAttribLocation(program, b"color\0".as_ptr() as *const _);
+            gl.EnableVertexArrayAttrib(vao, color_attrib as u32);
+            gl.VertexArrayAttribFormat(
+                vao,
+                color_attrib as u32,
                 3,
                 gl::FLOAT,
-                0,
-                5 * std::mem::size_of::<f32>() as gl::types::GLsizei,
-                (2 * std::mem::size_of::<f32>()) as *const () as *const _,
+                false as u8,
+                2 * std::mem::size_of::<f32>() as u32,
             );
-            gl.EnableVertexAttribArray(pos_attrib as gl::types::GLuint);
-            gl.EnableVertexAttribArray(color_attrib as gl::types::GLuint);
+            gl.VertexArrayAttribBinding(vao, color_attrib as u32, 0);
 
             Self {
                 program,
