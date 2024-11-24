@@ -1,13 +1,6 @@
-use std::{
-    ffi::{CStr, CString},
-    num::NonZero,
-    ops::Deref,
-};
+use std::num::NonZero;
 
 use anyhow::Context;
-use bytemuck::{cast_slice, offset_of, Pod, Zeroable};
-use gl::{types::GLfloat, Gl};
-use glam::{vec2, vec3, Vec2, Vec3};
 use glutin::{
     config::{Config, ConfigTemplateBuilder, GlConfig},
     context::{ContextAttributesBuilder, NotCurrentContext, PossiblyCurrentContext},
