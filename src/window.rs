@@ -1,6 +1,5 @@
 use std::{
-    ffi::{CStr, CString},
-    ops::Deref,
+    ffi::{CStr, CString}, num::NonZero, ops::Deref
 };
 
 use anyhow::Context;
@@ -14,10 +13,7 @@ use glutin::{
 };
 use glutin_winit::{DisplayBuilder, GlWindow};
 use winit::{
-    application::ApplicationHandler,
-    event_loop::EventLoop,
-    raw_window_handle::HasWindowHandle,
-    window::{Window, WindowAttributes},
+    application::ApplicationHandler, dpi::LogicalSize, event::WindowEvent, event_loop::EventLoop, raw_window_handle::HasWindowHandle, window::{Window, WindowAttributes}
 };
 
 pub mod gl {
@@ -120,16 +116,25 @@ impl ApplicationHandler for GfWindow {
         _window_id: winit::window::WindowId,
         event: winit::event::WindowEvent,
     ) {
-        if let winit::event::WindowEvent::RedrawRequested = event {
-            self.renderer.as_ref().unwrap().draw();
-            self.window.request_redraw();
-            let _ = self
-                .surface
-                .as_ref()
-                .unwrap()
-                .swap_buffers(self.context.as_ref().unwrap());
+        match event {
+            WindowEvent::RedrawRequested => {
+                self.renderer.as_ref().unwrap().draw();
+                self.window.request_redraw();
+                let _ = self
+                    .surface
+                    .as_ref()
+                    .unwrap()
+                    .swap_buffers(self.context.as_ref().unwrap());
+            }
+            WindowEvent::Resized(size) => {
+                self.surface.as_ref().unwrap().resize(self.context.as_ref().unwrap(), NonZero::new(size.width).unwrap(), NonZero::new(size.height).unwrap());
+                self.renderer
+                    .as_ref()
+                    .unwrap()
+                    .resize(size.width as i32, size.height as i32);
+            }
+            _ => (),
         }
-        dbg!("Window Event Called");
     }
 }
 
@@ -206,7 +211,6 @@ impl Renderer {
                 0,
                 5 * std::mem::size_of::<f32>() as gl::types::GLsizei,
             );
-
 
             let pos_attrib = gl.GetAttribLocation(program, b"position\0".as_ptr() as *const _);
             gl.EnableVertexArrayAttrib(vao, pos_attrib as u32);
