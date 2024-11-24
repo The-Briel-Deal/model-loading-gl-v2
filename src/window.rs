@@ -1,5 +1,7 @@
 use std::{
-    ffi::{CStr, CString}, num::NonZero, ops::Deref
+    ffi::{CStr, CString},
+    num::NonZero,
+    ops::Deref,
 };
 
 use anyhow::Context;
@@ -13,7 +15,11 @@ use glutin::{
 };
 use glutin_winit::{DisplayBuilder, GlWindow};
 use winit::{
-    application::ApplicationHandler, event::WindowEvent, event_loop::EventLoop, raw_window_handle::HasWindowHandle, window::{Window, WindowAttributes}
+    application::ApplicationHandler,
+    event::WindowEvent,
+    event_loop::EventLoop,
+    raw_window_handle::HasWindowHandle,
+    window::{Window, WindowAttributes},
 };
 
 pub mod gl {
@@ -127,7 +133,11 @@ impl ApplicationHandler for GfWindow {
                     .swap_buffers(self.context.as_ref().unwrap());
             }
             WindowEvent::Resized(size) => {
-                self.surface.as_ref().unwrap().resize(self.context.as_ref().unwrap(), NonZero::new(size.width).unwrap(), NonZero::new(size.height).unwrap());
+                self.surface.as_ref().unwrap().resize(
+                    self.context.as_ref().unwrap(),
+                    NonZero::new(size.width).unwrap(),
+                    NonZero::new(size.height).unwrap(),
+                );
                 self.renderer
                     .as_ref()
                     .unwrap()
