@@ -65,10 +65,6 @@ impl GfWindow {
             exit_state: Ok(()),
         })
     }
-    pub fn run(mut self, event_loop: EventLoop<()>) -> anyhow::Result<()> {
-        event_loop.run_app(&mut self)?;
-        Ok(())
-    }
     pub fn create_context(&self) -> anyhow::Result<NotCurrentContext> {
         let window_handle = self.window.window_handle()?.as_raw();
         let context_attributes = ContextAttributesBuilder::new().build(Some(window_handle));
@@ -86,6 +82,20 @@ impl GfWindow {
     pub fn create_gl_renderer(&self) -> Renderer {
         // Renderer can't be instantiated until context is current
         Renderer::new(&self.config.display())
+    }
+
+    pub fn run(
+        mut self,
+        event_loop: EventLoop<()>,
+        surface: Surface<WindowSurface>,
+        renderer: Renderer,
+        context: PossiblyCurrentContext,
+    ) -> anyhow::Result<()> {
+        self.surface = Some(surface);
+        self.context = Some(context);
+        self.renderer = Some(renderer);
+
+        Ok(event_loop.run_app(&mut self)?)
     }
 }
 
