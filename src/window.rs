@@ -25,18 +25,16 @@ pub mod gl {
 }
 
 pub struct GfWindow {
-    event_loop: Option<EventLoop<()>>,
     window: Window,
     config: Config,
-    renderer: Option<Renderer>,
-    surface: Option<Surface<WindowSurface>>,
-    context: Option<PossiblyCurrentContext>,
+    pub renderer: Option<Renderer>,
+    pub surface: Option<Surface<WindowSurface>>,
+    pub context: Option<PossiblyCurrentContext>,
     exit_state: anyhow::Result<()>,
 }
 
 impl GfWindow {
-    pub fn new() -> anyhow::Result<Self> {
-        let event_loop = EventLoop::builder().build().unwrap();
+    pub fn new(event_loop: &EventLoop<()>) -> anyhow::Result<Self> {
         let config_template_builder = ConfigTemplateBuilder::default();
 
         let config_picker = |configs: Box<dyn Iterator<Item = Config> + '_>| {
@@ -54,12 +52,11 @@ impl GfWindow {
 
         let (window, config) = DisplayBuilder::default()
             .with_window_attributes(Some(window_attributes))
-            .build(&event_loop, config_template_builder, config_picker)
+            .build(event_loop, config_template_builder, config_picker)
             .unwrap();
         let window = window.unwrap();
 
         Ok(GfWindow {
-            event_loop: Some(event_loop),
             window,
             config,
             renderer: None,
@@ -68,51 +65,33 @@ impl GfWindow {
             exit_state: Ok(()),
         })
     }
-    pub fn run(mut self) -> anyhow::Result<()> {
-        self.event_loop
-            .take()
-            .context("No event loop.")?
+    pub fn run(mut self, event_loop: EventLoop<()>) -> anyhow::Result<()> {
+        event_loop
             .run_app(&mut self)?;
         Ok(())
     }
-    fn create_context(&self) -> anyhow::Result<NotCurrentContext> {
+    pub fn create_context(&self) -> anyhow::Result<NotCurrentContext> {
         let window_handle = self.window.window_handle()?.as_raw();
         let context_attributes = ContextAttributesBuilder::new().build(Some(window_handle));
         let gl_display = self.config.display();
         unsafe { Ok(gl_display.create_context(&self.config, &context_attributes)?) }
     }
-}
-
-impl ApplicationHandler for GfWindow {
-    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-        let context = match self.create_context() {
-            Ok(context) => context,
-            Err(err) => {
-                self.exit_state = Err(err);
-                event_loop.exit();
-                return;
-            }
-        };
+    pub fn create_window_surface(&self) -> anyhow::Result<Surface<WindowSurface>> {
+        let display = self.config.display();
         let surface_attributes_builder = SurfaceAttributesBuilder::new();
         let surface_attributes = self
             .window
-            .build_surface_attributes(surface_attributes_builder)
-            .unwrap();
-        let surface = unsafe {
-            self.config
-                .display()
-                .create_window_surface(&self.config, &surface_attributes)
-                .unwrap()
-        };
-        let possibly_current_context = context.make_current(&surface).unwrap();
-
-        // Renderer can't be instantiated until context is current
-        let renderer = Renderer::new(&self.config.display());
-
-        self.renderer = Some(renderer);
-        self.context = Some(possibly_current_context);
-        self.surface = Some(surface);
+            .build_surface_attributes(surface_attributes_builder)?;
+        unsafe { Ok(display.create_window_surface(&self.config, &surface_attributes)?) }
     }
+    pub fn create_gl_renderer(&self) -> Renderer {
+        // Renderer can't be instantiated until context is current
+        Renderer::new(&self.config.display())
+    }
+}
+
+impl ApplicationHandler for GfWindow {
+    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {}
     fn window_event(
         &mut self,
         _event_loop: &winit::event_loop::ActiveEventLoop,
