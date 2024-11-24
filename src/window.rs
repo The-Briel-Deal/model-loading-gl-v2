@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::Context;
-use gl::types::GLfloat;
+use gl::{types::GLfloat, Gl};
 use glutin::{
     config::{Config, ConfigTemplateBuilder, GlConfig},
     context::{ContextAttributesBuilder, NotCurrentContext, PossiblyCurrentContext},
@@ -140,6 +140,25 @@ fn get_gl_string(gl: &gl::Gl, variant: gl::types::GLenum) -> Option<&'static CSt
     }
 }
 
+fn load_gl_fn_ptrs<D: GlDisplay>(gl_display: &D) -> Gl {
+    let gl = gl::Gl::load_with(|symbol| {
+        let symbol = CString::new(symbol).unwrap();
+        gl_display.get_proc_address(symbol.as_c_str()).cast()
+    });
+
+    if let Some(renderer) = get_gl_string(&gl, gl::RENDERER) {
+        println!("Running on {}", renderer.to_string_lossy());
+    }
+    if let Some(version) = get_gl_string(&gl, gl::VERSION) {
+        println!("OpenGL Version {}", version.to_string_lossy());
+    }
+    if let Some(shaders_version) = get_gl_string(&gl, gl::SHADING_LANGUAGE_VERSION) {
+        println!("Shaders version on {}", shaders_version.to_string_lossy());
+    }
+
+    gl
+}
+
 pub struct Renderer {
     program: gl::types::GLuint,
     vao: gl::types::GLuint,
@@ -149,23 +168,8 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn new<D: GlDisplay>(gl_display: &D) -> Self {
+        let gl = load_gl_fn_ptrs(gl_display);
         unsafe {
-            let gl = gl::Gl::load_with(|symbol| {
-                let symbol = CString::new(symbol).unwrap();
-                gl_display.get_proc_address(symbol.as_c_str()).cast()
-            });
-
-            if let Some(renderer) = get_gl_string(&gl, gl::RENDERER) {
-                println!("Running on {}", renderer.to_string_lossy());
-            }
-            if let Some(version) = get_gl_string(&gl, gl::VERSION) {
-                println!("OpenGL Version {}", version.to_string_lossy());
-            }
-
-            if let Some(shaders_version) = get_gl_string(&gl, gl::SHADING_LANGUAGE_VERSION) {
-                println!("Shaders version on {}", shaders_version.to_string_lossy());
-            }
-
             let vertex_shader = create_shader(&gl, gl::VERTEX_SHADER, VERTEX_SHADER_SOURCE);
             let fragment_shader = create_shader(&gl, gl::FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE);
 
