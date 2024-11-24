@@ -13,7 +13,7 @@ use glutin::{
 };
 use glutin_winit::{DisplayBuilder, GlWindow};
 use winit::{
-    application::ApplicationHandler, dpi::LogicalSize, event::WindowEvent, event_loop::EventLoop, raw_window_handle::HasWindowHandle, window::{Window, WindowAttributes}
+    application::ApplicationHandler, event::WindowEvent, event_loop::EventLoop, raw_window_handle::HasWindowHandle, window::{Window, WindowAttributes}
 };
 
 pub mod gl {
