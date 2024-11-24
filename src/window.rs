@@ -66,8 +66,7 @@ impl GfWindow {
         })
     }
     pub fn run(mut self, event_loop: EventLoop<()>) -> anyhow::Result<()> {
-        event_loop
-            .run_app(&mut self)?;
+        event_loop.run_app(&mut self)?;
         Ok(())
     }
     pub fn create_context(&self) -> anyhow::Result<NotCurrentContext> {
