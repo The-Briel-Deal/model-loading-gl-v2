@@ -1,6 +1,5 @@
 use std::num::NonZero;
 
-use anyhow::Context;
 use glutin::{
     config::{Config, ConfigTemplateBuilder, GlConfig},
     context::{ContextAttributesBuilder, NotCurrentContext, PossiblyCurrentContext},
@@ -27,9 +26,9 @@ pub mod gl {
 pub struct GfWindow {
     window: Window,
     config: Config,
-    pub renderer: Option<Renderer>,
-    pub surface: Option<Surface<WindowSurface>>,
-    pub context: Option<PossiblyCurrentContext>,
+    renderer: Option<Renderer>,
+    surface: Option<Surface<WindowSurface>>,
+    context: Option<PossiblyCurrentContext>,
     exit_state: anyhow::Result<()>,
 }
 
@@ -95,7 +94,9 @@ impl GfWindow {
         self.context = Some(context);
         self.renderer = Some(renderer);
 
-        Ok(event_loop.run_app(&mut self)?)
+        event_loop.run_app(&mut self)?;
+
+        self.exit_state
     }
 }
 
