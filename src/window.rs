@@ -144,5 +144,3 @@ impl ApplicationHandler for GfWindow {
         }
     }
 }
-
-

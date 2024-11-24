@@ -4,9 +4,10 @@ use bytemuck::{cast_slice, offset_of, Pod, Zeroable};
 use glam::{vec2, vec3, Vec2, Vec3};
 use glutin::prelude::GlDisplay;
 
-use crate::{gl::get_gl_string, window::gl::{self, types::GLfloat}};
-
-
+use crate::{
+    gl::get_gl_string,
+    window::gl::{self, types::GLfloat},
+};
 
 fn load_gl_fn_ptrs<D: GlDisplay>(gl_display: &D) -> gl::Gl {
     let gl = gl::Gl::load_with(|symbol| {
