@@ -29,7 +29,7 @@ pub struct GfWindow {
     event_loop: Option<EventLoop<()>>,
     window: Window,
     config: Config,
-    renderer: Renderer,
+    renderer: Option<Renderer>,
     surface: Option<Surface<WindowSurface>>,
     context: Option<PossiblyCurrentContext>,
     exit_state: anyhow::Result<()>,
@@ -59,12 +59,11 @@ impl GfWindow {
             .unwrap();
         let window = window.unwrap();
 
-        let renderer = Renderer::new(&config.display());
         Ok(GfWindow {
             event_loop: Some(event_loop),
             window,
             config,
-            renderer,
+            renderer: None,
             context: None,
             surface: None,
             exit_state: Ok(()),
@@ -107,6 +106,11 @@ impl ApplicationHandler for GfWindow {
                 .unwrap()
         };
         let possibly_current_context = context.make_current(&surface).unwrap();
+
+        // Renderer can't be instantiated until context is current
+        let renderer = Renderer::new(&self.config.display());
+
+        self.renderer = Some(renderer);
         self.context = Some(possibly_current_context);
         self.surface = Some(surface);
     }
@@ -117,7 +121,7 @@ impl ApplicationHandler for GfWindow {
         event: winit::event::WindowEvent,
     ) {
         if let winit::event::WindowEvent::RedrawRequested = event {
-            self.renderer.draw();
+            self.renderer.as_ref().unwrap().draw();
             self.window.request_redraw();
             let _ = self
                 .surface
@@ -179,10 +183,12 @@ impl Renderer {
 
             let mut vao = std::mem::zeroed();
             gl.GenVertexArrays(1, &mut vao);
+            assert_ne!(vao, 0);
             gl.BindVertexArray(vao);
 
             let mut vbo = std::mem::zeroed();
             gl.GenBuffers(1, &mut vbo);
+            assert_ne!(vbo, 0);
             gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
             gl.BufferData(
                 gl::ARRAY_BUFFER,
