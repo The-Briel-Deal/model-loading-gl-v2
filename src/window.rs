@@ -106,7 +106,9 @@ impl ApplicationHandler for GfWindow {
                 .create_window_surface(&self.config, &surface_attributes)
                 .unwrap()
         };
-        let _possibly_current_context = context.make_current(&surface);
+        let possibly_current_context = context.make_current(&surface).unwrap();
+        self.context = Some(possibly_current_context);
+        self.surface = Some(surface);
     }
     fn window_event(
         &mut self,
@@ -117,7 +119,11 @@ impl ApplicationHandler for GfWindow {
         if let winit::event::WindowEvent::RedrawRequested = event {
             self.renderer.draw();
             self.window.request_redraw();
-            let _ = self.surface.as_ref().unwrap().swap_buffers(self.context.as_ref().unwrap());
+            let _ = self
+                .surface
+                .as_ref()
+                .unwrap()
+                .swap_buffers(self.context.as_ref().unwrap());
         }
         dbg!("Window Event Called");
     }
