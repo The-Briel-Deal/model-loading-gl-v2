@@ -6,7 +6,10 @@ use glutin::prelude::GlDisplay;
 
 use crate::{
     gl::get_gl_string,
-    window::gl::{self, types::{GLfloat, GLuint}},
+    window::gl::{
+        self,
+        types::{GLfloat, GLuint},
+    },
 };
 
 fn load_gl_fn_ptrs<D: GlDisplay>(gl_display: &D) -> gl::Gl {
@@ -32,7 +35,6 @@ pub struct Renderer {
     program: gl::types::GLuint,
     vao: gl::types::GLuint,
     vbo: gl::types::GLuint,
-    ibo: gl::types::GLuint,
     pub rotation_matrix: Mat4,
     gl: gl::Gl,
 }
@@ -41,7 +43,6 @@ impl Renderer {
     pub fn new<D: GlDisplay>(gl_display: &D) -> Self {
         let gl = load_gl_fn_ptrs(gl_display);
         unsafe {
-
             let vertex_shader = create_shader(&gl, gl::VERTEX_SHADER, VERTEX_SHADER_SOURCE);
             let fragment_shader = create_shader(&gl, gl::FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE);
 
@@ -115,7 +116,6 @@ impl Renderer {
                 program,
                 vao,
                 vbo,
-                ibo,
                 rotation_matrix: Mat4::IDENTITY * Mat4::from_rotation_x(45.0_f32.to_radians()),
                 gl,
             }
@@ -152,7 +152,8 @@ impl Renderer {
 
             self.gl.ClearColor(red, green, blue, alpha);
             self.gl.Clear(gl::COLOR_BUFFER_BIT);
-            self.gl.DrawElements(gl::TRIANGLES, 12, gl::UNSIGNED_INT, null());
+            self.gl
+                .DrawElements(gl::TRIANGLES, 12, gl::UNSIGNED_INT, null());
         }
     }
 
