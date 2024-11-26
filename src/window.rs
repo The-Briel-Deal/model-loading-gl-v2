@@ -112,7 +112,7 @@ impl ApplicationHandler for GfWindow {
     ) {
         match event {
             WindowEvent::RedrawRequested => {
-                self.renderer.as_mut().unwrap().rotation_matrix *=
+                self.renderer.as_mut().unwrap().model_matrix *=
                     Mat4::from_rotation_z(1.0_f32.to_radians());
                 self.renderer.as_ref().unwrap().draw();
                 self.window.request_redraw();
@@ -129,7 +129,7 @@ impl ApplicationHandler for GfWindow {
                     NonZero::new(size.height).unwrap(),
                 );
                 self.renderer
-                    .as_ref()
+                    .as_mut()
                     .unwrap()
                     .resize(size.width as i32, size.height as i32);
             }

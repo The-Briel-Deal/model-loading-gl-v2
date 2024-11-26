@@ -6,10 +6,7 @@ use glutin::prelude::GlDisplay;
 
 use crate::{
     gl::get_gl_string,
-    window::gl::{
-        self,
-        types::GLfloat,
-    },
+    window::gl::{self, types::GLfloat},
 };
 
 fn load_gl_fn_ptrs<D: GlDisplay>(gl_display: &D) -> gl::Gl {
@@ -35,7 +32,9 @@ pub struct Renderer {
     program: gl::types::GLuint,
     vao: gl::types::GLuint,
     vbo: gl::types::GLuint,
-    pub rotation_matrix: Mat4,
+    pub model_matrix: Mat4,
+    view_matrix: Mat4,
+    viewport_size: (i32, i32),
     gl: gl::Gl,
 }
 
@@ -118,7 +117,9 @@ impl Renderer {
                 program,
                 vao,
                 vbo,
-                rotation_matrix: Mat4::IDENTITY * Mat4::from_rotation_x(45.0_f32.to_radians()),
+                model_matrix: Mat4::from_rotation_x(90.0_f32.to_radians()),
+                view_matrix: Mat4::from_translation(vec3(0.0, 0.0, -3.0)),
+                viewport_size: (800, 600),
                 gl,
             }
         }
@@ -136,6 +137,14 @@ impl Renderer {
         alpha: GLfloat,
     ) {
         unsafe {
+            let projection_matrix = Mat4::perspective_rh_gl(
+                45.0_f32.to_radians(),
+                self.viewport_size.0 as f32 / self.viewport_size.1 as f32,
+                0.1_f32,
+                100.0_f32,
+            );
+
+            let combined_matrix = projection_matrix * self.view_matrix * self.model_matrix;
             // Set rotation Matrix
             let matrix_location = self
                 .gl
@@ -144,7 +153,7 @@ impl Renderer {
                 matrix_location,
                 1,
                 cast(false),
-                self.rotation_matrix.to_cols_array().as_ptr(),
+                combined_matrix.to_cols_array().as_ptr(),
             );
 
             self.gl.UseProgram(self.program);
@@ -159,8 +168,9 @@ impl Renderer {
         }
     }
 
-    pub fn resize(&self, width: i32, height: i32) {
+    pub fn resize(&mut self, width: i32, height: i32) {
         unsafe {
+            self.viewport_size = (width, height);
             self.gl.Viewport(0, 0, width, height);
         }
     }
