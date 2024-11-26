@@ -1,14 +1,14 @@
-use std::{ffi::CString, ops::Deref, os::raw::c_void, ptr::null};
+use std::{ffi::CString, ops::Deref, ptr::null};
 
-use bytemuck::{cast, cast_ref, cast_slice, offset_of, Pod, Zeroable};
-use glam::{vec2, vec3, Mat4, Vec2, Vec3};
+use bytemuck::{cast, cast_slice, offset_of, Pod, Zeroable};
+use glam::{vec3, Mat4, Vec3};
 use glutin::prelude::GlDisplay;
 
 use crate::{
     gl::get_gl_string,
     window::gl::{
         self,
-        types::{GLfloat, GLuint},
+        types::GLfloat,
     },
 };
 
