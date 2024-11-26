@@ -1,12 +1,12 @@
-use std::{ffi::CString, ops::Deref};
+use std::{ffi::CString, ops::Deref, os::raw::c_void, ptr::null};
 
-use bytemuck::{cast_slice, offset_of, Pod, Zeroable};
-use glam::{vec2, vec3, Vec2, Vec3};
+use bytemuck::{cast, cast_ref, cast_slice, offset_of, Pod, Zeroable};
+use glam::{vec2, vec3, Mat4, Vec2, Vec3};
 use glutin::prelude::GlDisplay;
 
 use crate::{
     gl::get_gl_string,
-    window::gl::{self, types::GLfloat},
+    window::gl::{self, types::{GLfloat, GLuint}},
 };
 
 fn load_gl_fn_ptrs<D: GlDisplay>(gl_display: &D) -> gl::Gl {
@@ -32,6 +32,8 @@ pub struct Renderer {
     program: gl::types::GLuint,
     vao: gl::types::GLuint,
     vbo: gl::types::GLuint,
+    ibo: gl::types::GLuint,
+    pub rotation_matrix: Mat4,
     gl: gl::Gl,
 }
 
@@ -39,6 +41,7 @@ impl Renderer {
     pub fn new<D: GlDisplay>(gl_display: &D) -> Self {
         let gl = load_gl_fn_ptrs(gl_display);
         unsafe {
+
             let vertex_shader = create_shader(&gl, gl::VERTEX_SHADER, VERTEX_SHADER_SOURCE);
             let fragment_shader = create_shader(&gl, gl::FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE);
 
@@ -61,11 +64,24 @@ impl Renderer {
             let mut vbo = std::mem::zeroed();
             gl.CreateBuffers(1, &mut vbo);
             assert_ne!(vbo, 0);
+
             let vertex_data_as_bytes = cast_slice::<Vertex, u8>(&VERTEX_DATA);
             gl.NamedBufferStorage(
                 vbo,
                 vertex_data_as_bytes.len() as isize,
                 vertex_data_as_bytes.as_ptr() as *const _,
+                gl::DYNAMIC_STORAGE_BIT,
+            );
+
+            let mut ibo = u32::zeroed();
+            gl.CreateBuffers(1, &mut ibo);
+            assert_ne!(ibo, 1);
+
+            let index_data_as_bytes = cast_slice::<u32, u8>(&INDEX_DATA);
+            gl.NamedBufferStorage(
+                ibo,
+                cast(index_data_as_bytes.len()),
+                index_data_as_bytes.as_ptr() as *const _,
                 gl::DYNAMIC_STORAGE_BIT,
             );
 
@@ -76,19 +92,20 @@ impl Renderer {
                 0,
                 std::mem::size_of::<Vertex>() as gl::types::GLsizei,
             );
+            gl.VertexArrayElementBuffer(vao, ibo);
 
-            let pos_attrib = gl.GetAttribLocation(program, b"position\0".as_ptr() as *const _);
+            let pos_attrib = gl.GetAttribLocation(program, b"aPosition\0".as_ptr() as *const _);
             gl.EnableVertexArrayAttrib(vao, pos_attrib as u32);
-            gl.VertexArrayAttribFormat(vao, pos_attrib as u32, 2, gl::FLOAT, false as u8, 0);
+            gl.VertexArrayAttribFormat(vao, pos_attrib as u32, 3, gl::FLOAT, false as u8, 0);
             gl.VertexArrayAttribBinding(vao, pos_attrib as u32, 0);
 
-            let color_attrib = gl.GetAttribLocation(program, b"color\0".as_ptr() as *const _);
+            let color_attrib = gl.GetAttribLocation(program, b"aColor\0".as_ptr() as *const _);
             gl.EnableVertexArrayAttrib(vao, color_attrib as u32);
             gl.VertexArrayAttribFormat(
                 vao,
                 color_attrib as u32,
                 (size_of::<Vec3>() / size_of::<f32>()) as i32,
-                gl::FLOAT,
+                gl::UNSIGNED_INT,
                 false as u8,
                 offset_of!(Vertex, color) as u32,
             );
@@ -98,6 +115,8 @@ impl Renderer {
                 program,
                 vao,
                 vbo,
+                ibo,
+                rotation_matrix: Mat4::IDENTITY * Mat4::from_rotation_x(45.0_f32.to_radians()),
                 gl,
             }
         }
@@ -115,6 +134,17 @@ impl Renderer {
         alpha: GLfloat,
     ) {
         unsafe {
+            // Set rotation Matrix
+            let matrix_location = self
+                .gl
+                .GetUniformLocation(self.program, b"uMatrix\0".as_ptr().cast());
+            self.gl.UniformMatrix4fv(
+                matrix_location,
+                1,
+                cast(false),
+                self.rotation_matrix.to_cols_array().as_ptr(),
+            );
+
             self.gl.UseProgram(self.program);
 
             self.gl.BindVertexArray(self.vao);
@@ -122,7 +152,7 @@ impl Renderer {
 
             self.gl.ClearColor(red, green, blue, alpha);
             self.gl.Clear(gl::COLOR_BUFFER_BIT);
-            self.gl.DrawArrays(gl::TRIANGLES, 0, 3);
+            self.gl.DrawElements(gl::TRIANGLES, 12, gl::UNSIGNED_INT, null());
         }
     }
 
@@ -170,7 +200,7 @@ unsafe fn create_shader(
 #[repr(C)]
 #[derive(Pod, Clone, Copy, Zeroable)]
 pub struct Vertex {
-    pub position: Vec2,
+    pub position: Vec3,
     pub color: Vec3,
 }
 impl Default for Vertex {
@@ -179,43 +209,56 @@ impl Default for Vertex {
     }
 }
 
-static VERTEX_DATA: [Vertex; 3] = [
+static VERTEX_DATA: [Vertex; 4] = [
     Vertex {
-        position: vec2(-0.5, -0.5),
+        position: vec3(-0.5, -0.5, 0.0),
         color: vec3(1.0, 0.0, 0.0),
     },
     Vertex {
-        position: vec2(0.0, 0.5),
+        position: vec3(0.0, 0.5, 0.0),
         color: vec3(0.0, 1.0, 0.0),
     },
     Vertex {
-        position: vec2(0.5, -0.5),
+        position: vec3(0.5, -0.5, 0.0),
         color: vec3(0.0, 0.0, 1.0),
+    },
+    Vertex {
+        position: vec3(0.0, 0.0, 0.5),
+        color: vec3(0.0, 0.0, 0.0),
     },
 ];
 
+#[rustfmt::skip]
+static INDEX_DATA: [u32; 12] = [
+    0, 1, 2,
+    0, 1, 3,
+    0, 2, 3,
+    1, 2, 3,
+];
+
 const VERTEX_SHADER_SOURCE: &[u8] = b"
-#version 100
-precision mediump float;
+#version 460 core
 
-attribute vec2 position;
-attribute vec3 color;
+in vec3 aPosition;
+in vec3 aColor;
 
-varying vec3 v_color;
+uniform mat4 uMatrix;
+
+out vec3 vColor;
 
 void main() {
-    gl_Position = vec4(position, 0.0, 1.0);
-    v_color = color;
+    gl_Position = uMatrix * vec4(aPosition, 1.0);
+    vColor = aColor;
 }
 \0";
 
 const FRAGMENT_SHADER_SOURCE: &[u8] = b"
-#version 100
-precision mediump float;
+#version 460 core
 
-varying vec3 v_color;
+in vec3 vColor;
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = vec4(v_color, 1.0);
+    FragColor = vec4(vColor, 1.0);
 }
 \0";

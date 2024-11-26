@@ -1,5 +1,6 @@
 use std::num::NonZero;
 
+use glam::Mat4;
 use glutin::{
     config::{Config, ConfigTemplateBuilder, GlConfig},
     context::{ContextAttributesBuilder, NotCurrentContext, PossiblyCurrentContext},
@@ -111,6 +112,8 @@ impl ApplicationHandler for GfWindow {
     ) {
         match event {
             WindowEvent::RedrawRequested => {
+                self.renderer.as_mut().unwrap().rotation_matrix *=
+                    Mat4::from_rotation_z(1.0_f32.to_radians());
                 self.renderer.as_ref().unwrap().draw();
                 self.window.request_redraw();
                 let _ = self
