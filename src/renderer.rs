@@ -43,6 +43,8 @@ impl Renderer {
     pub fn new<D: GlDisplay>(gl_display: &D) -> Self {
         let gl = load_gl_fn_ptrs(gl_display);
         unsafe {
+            gl.Enable(gl::DEPTH_TEST);
+
             let vertex_shader = create_shader(&gl, gl::VERTEX_SHADER, VERTEX_SHADER_SOURCE);
             let fragment_shader = create_shader(&gl, gl::FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE);
 
@@ -151,7 +153,7 @@ impl Renderer {
             self.gl.BindBuffer(gl::ARRAY_BUFFER, self.vbo);
 
             self.gl.ClearColor(red, green, blue, alpha);
-            self.gl.Clear(gl::COLOR_BUFFER_BIT);
+            self.gl.Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             self.gl
                 .DrawElements(gl::TRIANGLES, 12, gl::UNSIGNED_INT, null());
         }
