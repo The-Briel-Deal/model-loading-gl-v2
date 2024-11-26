@@ -117,7 +117,7 @@ impl Renderer {
                 program,
                 vao,
                 vbo,
-                model_matrix: Mat4::from_rotation_x(90.0_f32.to_radians()),
+                model_matrix: Mat4::from_rotation_x(-95.0_f32.to_radians()),
                 view_matrix: Mat4::from_translation(vec3(0.0, 0.0, -3.0)),
                 viewport_size: (800, 600),
                 gl,
